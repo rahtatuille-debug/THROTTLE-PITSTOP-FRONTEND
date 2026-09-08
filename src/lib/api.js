@@ -16,7 +16,20 @@ async function apiFetch(path, options = {}) {
   });
 
   if (!res.ok) {
-    throw new Error(`API request to ${path} failed with status ${res.status}`);
+    // Attach the parsed body (when present) so callers that need
+    // field-level detail - e.g. checkout stock-validation errors - can
+    // read it, without changing behavior for callers that just want
+    // err.message.
+    let body = null;
+    try {
+      body = await res.json();
+    } catch (err) {
+      // Response wasn't JSON - fine, body stays null.
+    }
+    const error = new Error(`API request to ${path} failed with status ${res.status}`);
+    error.status = res.status;
+    error.body = body;
+    throw error;
   }
 
   return res.json();
@@ -33,4 +46,15 @@ export function getProduct(slug) {
 
 export function getCategories() {
   return apiFetch(`/categories/`);
+}
+
+export function createOrder(payload) {
+  return apiFetch(`/orders/`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getOrder(id) {
+  return apiFetch(`/orders/${id}/`);
 }

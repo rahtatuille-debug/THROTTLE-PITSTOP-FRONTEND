@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getProduct } from "@/lib/api";
+import AddToCartButton from "@/components/AddToCartButton";
 
 function formatKES(amount) {
   return new Intl.NumberFormat("en-KE", {
@@ -60,15 +61,7 @@ export default async function ProductPage({ params }) {
           )}
         </p>
 
-        <button
-          disabled={!product.in_stock}
-          className="mt-8 w-full md:w-auto bg-throttle-orange text-white font-body font-semibold px-8 py-3.5 hover:bg-throttle-orange-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Add to cart
-        </button>
-        <p className="font-body text-xs text-throttle-grey mt-3">
-          Cart and checkout are coming in the next build phase — this button is a placeholder for now.
-        </p>
+        <AddToCartButton product={product} />
       </div>
     </section>
   );
