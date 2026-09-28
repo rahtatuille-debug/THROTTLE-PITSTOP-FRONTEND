@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SHOP_LOCATION, SHOP_HOURS, SHOP_PHONES, phoneHref } from "@/lib/shop";
 
 export default function Footer() {
   return (
@@ -13,9 +14,21 @@ export default function Footer() {
         </div>
         <div className="font-body text-sm text-white/80">
           <h4 className="text-white font-semibold mb-3">Visit us</h4>
-          <p>Anwar Center, Karen</p>
-          <p>Nairobi, Kenya</p>
-          <p className="mt-3">Mon – Sat: 8:00 AM – 6:00 PM</p>
+          {SHOP_LOCATION.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+          <div className="mt-3">
+            {SHOP_HOURS.map(({ days, time }) => (
+              <p key={days}>{days}: {time}</p>
+            ))}
+          </div>
+          <ul className="mt-3 space-y-1">
+            {SHOP_PHONES.map((phone) => (
+              <li key={phone}>
+                <a href={phoneHref(phone)} className="hover:text-throttle-orange">{phone}</a>
+              </li>
+            ))}
+          </ul>
         </div>
         <div className="font-body text-sm">
           <h4 className="text-white font-semibold mb-3">Explore</h4>

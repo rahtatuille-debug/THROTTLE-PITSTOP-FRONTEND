@@ -1,9 +1,9 @@
 # Throttle Pitstop — Frontend
 
 Next.js (App Router) + Tailwind storefront for Throttle Pitstop
-(Anwar Center, Karen). Covers **Phase 0–2** of the build plan: site
-shell, branding, and the product catalog (shop grid + product detail),
-reading from the Django backend API.
+(Anwar Center, Karen). Covers **Phase 0–3** of the build plan: site
+shell, branding, the product catalog (shop grid + product detail), and
+cart + guest checkout, reading from the Django backend API.
 
 ## Stack
 - Next.js 14 (App Router, JavaScript)
@@ -34,7 +34,10 @@ python manage.py seed_catalog
 - `/` — Home, with hero, category strip, featured products
 - `/shop` — Full catalog grid with category filter sidebar
 - `/shop/[slug]` — Product detail page
-- `/about`, `/services`, `/contact` — Placeholder pages (real content is Phase 7)
+- `/checkout` — Guest checkout (name, phone, delivery address, payment method)
+- `/order-confirmation/[id]` — Order summary after checkout
+- `/contact` — Phone numbers, opening hours, location
+- `/about`, `/services` — Placeholder pages (real content is Phase 7)
 
 ## Design notes
 
@@ -44,11 +47,13 @@ python manage.py seed_catalog
 - The diagonal "speed line" motif (`.diagonal-panel` in `globals.css`)
   is the site's one recurring visual signature — reuse it rather than
   introducing a new decorative shape elsewhere.
+- Shop hours, phone numbers and location live in `src/lib/shop.js` —
+  the footer and contact page both read from it.
 - `src/lib/api.js` is the only place that talks to the backend — add
   new endpoints there, not with raw `fetch()` calls scattered in pages.
 
 ## What's not built yet
 
-Cart, checkout, and payments are Phase 3–5 — the "Add to cart" button
-on product pages is currently a disabled placeholder. See
+Real M-Pesa payment is Phase 4–5 — checkout records the chosen
+payment method, but doesn't take payment online yet. See
 `throttle-pitstop-build-plan.md`.
