@@ -41,15 +41,26 @@ python manage.py seed_catalog
 
 ## Design notes
 
-- Colors and fonts are defined as Tailwind tokens in `tailwind.config.js`
-  (`throttle.orange`, `throttle.ink`, etc.) — change brand colors there,
-  not by hunting for hex codes in components.
-- The diagonal "speed line" motif (`.diagonal-panel` in `globals.css`)
-  is the site's one recurring visual signature — reuse it rather than
-  introducing a new decorative shape elsewhere.
-- Shop hours, phone numbers and location live in `src/lib/shop.js` —
-  the footer and contact page both read from it.
-- `src/lib/api.js` is the only place that talks to the backend — add
+- **Palette:** white, black and orange only. Colours and fonts are Tailwind
+  tokens in `tailwind.config.js` (`throttle.orange`, `throttle.ink`, etc.).
+  Change brand colours there, not by hunting for hex codes in components.
+- **Type:** Bebas Neue for headlines (`.display-xl/lg/md`), Inter for body.
+  Both are loaded by `next/font` in `app/layout.js`; don't redefine
+  `--font-display`/`--font-body` in CSS or the fonts silently fall back.
+- **Shared styles** live in `app/globals.css`: buttons (`.btn-primary`,
+  `.btn-dark`, `.btn-ghost-light`, `.btn-ghost-dark`), `.eyebrow` labels,
+  `.field` inputs, `.text-outline` type, and textures (`.grain`,
+  `.grid-lines`, `.stripes`).
+- **Every page opens on a dark banner** (`components/PageHero.js`) because
+  the header is transparent at the top of the page and turns white on scroll.
+- **Motion:** scroll-in animations use `components/Reveal.js`; the home hero's
+  rev counter is `components/home/RevGauge.js`. All motion is switched off
+  for visitors with "reduce motion" enabled.
+- **Logo:** `public/logo-mark.png` is the transparent version used on the
+  site. Favicons are `app/icon.png` and `app/apple-icon.png`.
+- Shop hours, phone numbers and location live in `src/lib/shop.js`, and
+  every page reads them from there.
+- `src/lib/api.js` is the only place that talks to the backend. Add
   new endpoints there, not with raw `fetch()` calls scattered in pages.
 
 ## What's not built yet

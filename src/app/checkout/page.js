@@ -3,14 +3,31 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import Link from "next/link";
+import Image from "next/image";
 import { createOrder } from "@/lib/api";
+import { formatKES } from "@/lib/format";
+import PageHero from "@/components/PageHero";
+import ProductPlaceholder from "@/components/ProductPlaceholder";
+import { ArrowRight, WalletIcon } from "@/components/Icons";
 
-function formatKES(amount) {
-  return new Intl.NumberFormat("en-KE", {
-    style: "currency",
-    currency: "KES",
-    maximumFractionDigits: 0,
-  }).format(amount);
+const PAYMENT_OPTIONS = [
+  { value: "cod", label: "Cash on Delivery", detail: "Pay when your order arrives." },
+  { value: "mpesa", label: "M-Pesa", detail: "We'll follow up with payment details." },
+];
+
+function Step({ number, title, children }) {
+  return (
+    <fieldset className="border-t border-throttle-line pt-8">
+      <legend className="flex items-center gap-4 pr-4">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-throttle-ink font-display text-lg text-white">
+          {number}
+        </span>
+        <span className="font-display text-3xl tracking-wide text-throttle-ink">{title}</span>
+      </legend>
+      <div className="mt-6 space-y-5">{children}</div>
+    </fieldset>
+  );
 }
 
 // Loose Kenyan phone check - starts with 0 or +254, 7-13 digits total.
@@ -89,146 +106,209 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <section className="max-w-3xl mx-auto px-6 py-20 text-center">
-        <h1 className="font-display text-4xl tracking-wide text-throttle-ink mb-4">Checkout</h1>
-        <p className="font-body text-throttle-grey">
-          Your cart is empty — add some gear before checking out.
-        </p>
-      </section>
+      <>
+        <PageHero eyebrow="Checkout" title="Your bag is" accent="empty." watermark="BAG" />
+        <section className="max-w-3xl mx-auto px-6 py-24 text-center">
+          <p className="font-body text-throttle-grey">
+            Add some gear before checking out.
+          </p>
+          <Link href="/shop" className="btn-primary mt-8">
+            Browse the shop <ArrowRight />
+          </Link>
+        </section>
+      </>
     );
   }
 
   return (
-    <section className="max-w-5xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-2 gap-12">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide text-throttle-ink mb-8">Checkout</h1>
+    <>
+      <PageHero eyebrow="Secure checkout" title="Almost" accent="there." watermark="GO" />
 
-        {generalError && (
-          <div className="border border-red-300 bg-red-50 text-red-700 font-body text-sm px-4 py-3 mb-6">
-            {generalError}
-          </div>
-        )}
+      <section className="max-w-7xl mx-auto px-6 py-16 md:py-20 grid grid-cols-1 gap-14 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          {generalError && (
+            <div className="border-l-4 border-red-500 bg-red-50 text-red-700 font-body text-sm px-5 py-4 mb-8">
+              {generalError}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block font-body text-sm font-semibold text-throttle-ink mb-1" htmlFor="customerName">
-              Full name
-            </label>
-            <input
-              id="customerName"
-              required
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full border border-throttle-line px-3 py-2.5 font-body text-sm"
-            />
-          </div>
+          <form id="checkout-form" onSubmit={handleSubmit} className="space-y-12">
+            <Step number="1" title="Your details">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="field-label" htmlFor="customerName">
+                    Full name
+                  </label>
+                  <input
+                    id="customerName"
+                    required
+                    autoComplete="name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="field"
+                  />
+                </div>
 
-          <div>
-            <label className="block font-body text-sm font-semibold text-throttle-ink mb-1" htmlFor="customerPhone">
-              Phone number
-            </label>
-            <input
-              id="customerPhone"
-              required
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              placeholder="0712345678"
-              className="w-full border border-throttle-line px-3 py-2.5 font-body text-sm"
-            />
-            {phoneError && (
-              <p className="font-body text-xs text-red-600 mt-1">{phoneError}</p>
-            )}
-          </div>
+                <div>
+                  <label className="field-label" htmlFor="customerPhone">
+                    Phone number
+                  </label>
+                  <input
+                    id="customerPhone"
+                    required
+                    type="tel"
+                    autoComplete="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="0712345678"
+                    className={`field ${phoneError ? "!border-red-500" : ""}`}
+                    aria-invalid={Boolean(phoneError)}
+                  />
+                  {phoneError && (
+                    <p className="font-body text-xs text-red-600 mt-2">{phoneError}</p>
+                  )}
+                </div>
+              </div>
+            </Step>
 
-          <div>
-            <label className="block font-body text-sm font-semibold text-throttle-ink mb-1" htmlFor="deliveryAddress">
-              Delivery address
-            </label>
-            <textarea
-              id="deliveryAddress"
-              required
-              rows={3}
-              value={deliveryAddress}
-              onChange={(e) => setDeliveryAddress(e.target.value)}
-              className="w-full border border-throttle-line px-3 py-2.5 font-body text-sm"
-            />
-          </div>
-
-          <div>
-            <span className="block font-body text-sm font-semibold text-throttle-ink mb-2">
-              Payment method
-            </span>
-            <div className="space-y-2 font-body text-sm">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="cod"
-                  checked={paymentMethod === "cod"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+            <Step number="2" title="Delivery">
+              <div>
+                <label className="field-label" htmlFor="deliveryAddress">
+                  Delivery address
+                </label>
+                <textarea
+                  id="deliveryAddress"
+                  required
+                  rows={3}
+                  autoComplete="street-address"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  placeholder="Estate, street, building, and any landmarks"
+                  className="field resize-none"
                 />
-                Cash on Delivery
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="mpesa"
-                  checked={paymentMethod === "mpesa"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+              </div>
+
+              <div>
+                <label className="field-label" htmlFor="notes">
+                  Notes <span className="text-throttle-grey normal-case tracking-normal font-normal">(optional)</span>
+                </label>
+                <textarea
+                  id="notes"
+                  rows={2}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Sizing questions, delivery times, gate codes..."
+                  className="field resize-none"
                 />
-                M-Pesa
-              </label>
+              </div>
+            </Step>
+
+            <Step number="3" title="Payment">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {PAYMENT_OPTIONS.map((option) => {
+                  const selected = paymentMethod === option.value;
+                  return (
+                    <label
+                      key={option.value}
+                      className={`relative flex cursor-pointer items-start gap-4 border-2 p-5 transition-all duration-300 ${
+                        selected
+                          ? "border-throttle-orange bg-throttle-orange/5 shadow-[0_10px_30px_-15px_rgba(245,128,33,0.6)]"
+                          : "border-throttle-line hover:border-throttle-ink/30"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={option.value}
+                        checked={selected}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="sr-only peer"
+                      />
+                      <span
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors peer-focus-visible:ring-4 peer-focus-visible:ring-throttle-orange/30 ${
+                          selected ? "border-throttle-orange" : "border-throttle-ink/25"
+                        }`}
+                      >
+                        <span className={`h-2.5 w-2.5 rounded-full bg-throttle-orange transition-transform duration-300 ${selected ? "scale-100" : "scale-0"}`} />
+                      </span>
+                      <span>
+                        <span className="block font-body font-semibold text-throttle-ink">{option.label}</span>
+                        <span className="block font-body text-xs text-throttle-grey mt-1">{option.detail}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </Step>
+          </form>
+        </div>
+
+        <aside className="lg:col-span-5">
+          <div className="lg:sticky lg:top-28 relative overflow-hidden bg-throttle-ink text-white grain">
+            <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-throttle-orange/25 blur-3xl" aria-hidden="true" />
+            <div className="relative z-10 p-8">
+              <p className="eyebrow">Order summary</p>
+              <ul className="mt-6 divide-y divide-white/10">
+                {items.map((item) => (
+                  <li key={item.productId} className="flex items-center gap-4 py-4">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden bg-throttle-steel">
+                      {item.primaryImage ? (
+                        <Image src={item.primaryImage} alt={item.name} fill sizes="64px" className="object-cover" />
+                      ) : (
+                        <ProductPlaceholder label={item.name.split(" ")[0]} size="sm" />
+                      )}
+                      <span className="absolute right-0 top-0 flex h-5 min-w-5 items-center justify-center bg-throttle-orange px-1 font-body text-[10px] font-bold">
+                        {item.quantity}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-body text-sm text-white leading-snug">{item.name}</p>
+                      {itemErrors[item.productId] && (
+                        <p className="font-body text-xs text-red-400 mt-1">{itemErrors[item.productId]}</p>
+                      )}
+                    </div>
+                    <p className="font-body text-sm font-semibold text-white whitespace-nowrap">
+                      {formatKES(item.price * item.quantity)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-4 space-y-2 border-t border-white/10 pt-6 font-body text-sm">
+                <div className="flex justify-between text-white/60">
+                  <span>Subtotal</span>
+                  <span>{formatKES(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-white/60">
+                  <span>Delivery</span>
+                  <span>Confirmed by phone</span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-end justify-between border-t border-white/10 pt-6">
+                <span className="font-body text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">Total</span>
+                <span className="font-display text-5xl tracking-wide leading-none">{formatKES(subtotal)}</span>
+              </div>
+
+              <button
+                type="submit"
+                form="checkout-form"
+                disabled={submitting}
+                className="btn-primary w-full mt-8"
+              >
+                {submitting ? "Placing order..." : (
+                  <>
+                    Place order <ArrowRight />
+                  </>
+                )}
+              </button>
+              <p className="mt-4 flex items-center justify-center gap-2 font-body text-xs text-white/45">
+                <WalletIcon className="w-4 h-4" /> No card needed. M-Pesa or cash.
+              </p>
             </div>
           </div>
-
-          <div>
-            <label className="block font-body text-sm font-semibold text-throttle-ink mb-1" htmlFor="notes">
-              Notes (optional)
-            </label>
-            <textarea
-              id="notes"
-              rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full border border-throttle-line px-3 py-2.5 font-body text-sm"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-throttle-orange text-white font-body font-semibold px-8 py-3.5 hover:bg-throttle-orange-dark transition-colors disabled:opacity-50"
-          >
-            {submitting ? "Placing order..." : "Place order"}
-          </button>
-        </form>
-      </div>
-
-      <div>
-        <h2 className="font-body font-semibold text-throttle-ink mb-4">Order summary</h2>
-        <ul className="divide-y divide-throttle-line border border-throttle-line">
-          {items.map((item) => (
-            <li key={item.productId} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <p className="font-body text-sm text-throttle-ink">
-                  {item.name} <span className="text-throttle-grey">× {item.quantity}</span>
-                </p>
-                {itemErrors[item.productId] && (
-                  <p className="font-body text-xs text-red-600 mt-1">{itemErrors[item.productId]}</p>
-                )}
-              </div>
-              <p className="font-body text-sm text-throttle-ink">
-                {formatKES(item.price * item.quantity)}
-              </p>
-            </li>
-          ))}
-        </ul>
-        <div className="flex items-center justify-between font-body font-semibold text-throttle-ink mt-4 px-1">
-          <span>Subtotal</span>
-          <span>{formatKES(subtotal)}</span>
-        </div>
-      </div>
-    </section>
+        </aside>
+      </section>
+    </>
   );
 }
